@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Fleetee Team"]
 description = "Autonomous event filter and state-machine follow library"
-license = "MIT"
+license = "Apache-2.0"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }

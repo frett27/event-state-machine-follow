@@ -12,6 +12,24 @@ That sentence is a state. Silence for two hours becomes `not_operational.unconne
 
 The crate is autonomous: activation rules are plain condition strings. It evaluates them against a per-device history. It carries transition actions (`enroll_device`, `resume_operation`) as metadata so the host that is allowed to touch the hardware can decide what to do.
 
+The same follower is meant to travel with the device. One JSON description and one `StateAgent` per device id are enough for a node, a gateway, or a fleet service. Licensed under [Apache-2.0](LICENSE-APACHE), so each of those projects can take it.
+
+## Use it in IoT, RustiQ IoT, and Fleetee
+
+| Project | Where the follower sits | What it answers |
+|---------|-------------------------|-----------------|
+| **IoT** | Any device, gateway, or service that already stores traces | Is this thing connected, enrolled, operating, hot — from the events it already emits |
+| **[RustiQ IoT](http://rustiqiot.frett27.net/)** | On the node, next to the local traces (`enrollment`, `connection_to_cloud`, `temperature`) | The status of that one device, kept on the device, ready for the admin stack |
+| **[Fleetee](https://github.com/fleetee/fleetee)** | In the fleet. Fleetee already re-exports this crate | One follower per device id across the fleet, with the same sentences the node can run |
+
+Copy the state description between them. The device id is the only name that changes. A RustiQ IoT node can follow itself. Fleetee follows every node with the same rules. Another IoT service does the same with its own event names.
+
+```rust
+// One agent per device, in a node or in the fleet.
+let mut agent = StateAgent::new(device_id, description)?;
+let (active, changes) = agent.event_arrived_so_evaluate_states(&event)?;
+```
+
 ## Status of one display
 
 Several aspects can be true at once. Names are dotted paths: the group is a label, the leaf is the aspect.
@@ -29,7 +47,7 @@ Each arrival also returns only the diffs: `state_activated` and `state_deactivat
 
 ## Add the crate
 
-This package is a member of the [Fleetee](https://github.com/fleetee/fleetee) workspace (`MIT`, Rust 2021). From another crate in that workspace:
+This package is a Rust 2021 library in the [Fleetee](https://github.com/fleetee/fleetee) workspace, licensed under [Apache-2.0](LICENSE-APACHE). From another crate in that workspace:
 
 ```toml
 [dependencies]
@@ -240,4 +258,8 @@ Suggested path: tutorial, then expressions, then the `factory_display` example. 
 
 ## License
 
-MIT. Authors: Fleetee Team.
+Copyright 2024–2026 Fleetee Team.
+
+Licensed under the Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0).
+
+Expression parsing links the BSD-3-Clause [`antlr-rust`](../antlr4rust) runtime; that dependency keeps its own license.
