@@ -1,0 +1,84 @@
+{
+  "states": {
+    "not_operational": {
+      "states": {
+        "unconnected": {
+          "description": "The device is not connected to the network",
+          "facts": {
+            "condition": "NOT (enrollment since 72 hours from now OR connection_to_cloud since 72 hours from now)"
+          }
+        },
+        "un_enrolled": {
+          "description": "The device is not enrolled in the system",
+          "facts": {
+            "condition": "NOT enrollment_id_created"
+          }
+        },
+        "unconnected_enrolled": {
+          "facts": {
+            "condition": "enrollment_id_created AND NOT (connection_to_cloud since 24 hours from now)"
+          }
+        }
+      },
+      "transitions": [
+        {
+          "name": "enroll_device_transition",
+          "from": "not_operational.unconnected",
+          "to": "not_operational.un_enrolled",
+          "condition": "user_validation_on_this_device_status",
+          "action": {
+            "name": "enroll_device",
+            "description": "Enroll the device in the system"
+          }
+        },
+        {
+          "name": "connect_device_transition",
+          "from": "not_operational.un_enrolled",
+          "to": "not_operational.unconnected_enrolled",
+          "condition": "enrollment_id_created",
+          "action": {
+            "name": "connect_device",
+            "description": "Connect the device to the network"
+          }
+        }
+      ]
+    },
+    "operational": {
+      "states": {
+        "operating": {
+          "description": "The device is enrolled in the system",
+          "facts": {
+            "condition": "ConnectionTraceFromDevice#[wifi == \"factory_display_001\" AND status == true] AND DataCollectionSuccess#[wifi == \"factory_display_001\" AND status == true] since 72 hours from now"
+          }
+        },
+        "missed_schedule": {
+          "facts": {
+            "condition": "ScheduleMissed#[wifi == \"factory_display_001\" AND status == true]"
+          }
+        }
+      },
+      "transitions": [
+        {
+          "name": "missed_schedule_transition",
+          "from": "operational.operating",
+          "to": "operational.missed_schedule",
+          "condition": "ScheduleMissed#[wifi == \"factory_display_001\" AND status == true]",
+          "action": {
+            "name": "handle_missed_schedule",
+            "description": "Handle the missed schedule event"
+          }
+        },
+        {
+          "name": "resume_operation_transition",
+          "from": "operational.missed_schedule",
+          "to": "operational.operating",
+          "condition": "ConnectionTraceFromDevice#[wifi == \"factory_display_001\" AND status == true]",
+          "action": {
+            "name": "resume_operation",
+            "description": "Resume normal operation"
+          }
+        }
+      ]
+    }
+  }
+}
